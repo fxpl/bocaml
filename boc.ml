@@ -67,7 +67,8 @@ let rec release = function
   | Request {next; target} as request ->
      match !next with
      | None ->
-        set_last target (Some request)
+        assert (match get_last target with | None -> false | Some req -> req == request);
+        set_last target None
      | Some req ->
         resolve_one req
 
