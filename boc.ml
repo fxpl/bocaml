@@ -21,6 +21,19 @@ and request =
      target: cown
     }
 
+let uid = ref 0
+
+let new_cown value =
+  uid := !uid + 1;
+  Cown {value = ref value; identity = !uid; last = ref None}
+
+let get_value = function
+  | Cown {value} -> !value
+
+let set_value cown new_value =
+  match cown with
+  | Cown {value} -> value := new_value
+
 let set_count behavior new_count =
   match behavior with
   | Behavior{count} -> count := new_count
@@ -92,3 +105,15 @@ let schedule cown thunk =
   resolve_one behavior
 
 let when_ cown thunk = schedule cown thunk
+
+let () =
+  let c = new_cown 42 in
+  when_ c (fun () ->
+      Printf.printf "Hello! My value is %d\n" (get_value c)
+  );
+  when_ c (fun () ->
+      set_value c 4711
+  );
+  when_ c (fun () ->
+      Printf.printf "Hello again! My value is %d\n" (get_value c)
+  )
