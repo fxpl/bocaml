@@ -1,5 +1,8 @@
+(* TODO: Should probably take as argument the contents of a cown *)
 type thunk = unit -> unit
 
+(* TODO: Should be polymorphic somehow (possibly as an opaque
+   something something modules) *)
 type cown =
   Cown of
     {value: int ref;
@@ -7,6 +10,7 @@ type cown =
      last: (request option) ref
     }
 
+(* TODO: What about behaviors grabbing multiple cowns *)
 and behavior =
   Behavior of
     {thunk: thunk;
@@ -67,6 +71,7 @@ let rec release = function
   | Request {next; target} as request ->
      match !next with
      | None ->
+        (* TODO: This should be a compare and swap *)
         assert (match get_last target with | None -> false | Some req -> req == request);
         set_last target None
      | Some req ->
@@ -74,14 +79,17 @@ let rec release = function
 
 and resolve_one = function
   | Behavior {thunk; count; requests} ->
+     (* TODO: This should be atomic *)
      count := !count - 1;
      if !count = 0 then
+       (* TODO: This should be spawned in a new thread *)
        let _ = thunk() in
        let _ = List.map release requests in
        ()
 
 let start_append_req behavior = function
   | Request {target} as request ->
+     (* TODO: These two should be atomic *)
      let prev = get_last target in
      let _ = set_last target (Some request) in
      match prev with
